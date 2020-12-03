@@ -1,0 +1,13 @@
+{
+  "services": {
+    "eth-node-service": {
+      "value": ""
+    },
+    "gateway-service": {
+      "value": "http://localhost:3123"
+    }
+  },
+  "params": {
+    "restricted-locations": ["BY", "CU", "IR", "IQ", "CI", "LR", "KP", "SD", "SY", "ZW", "US"]
+  }
+}
