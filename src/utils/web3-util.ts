@@ -4,6 +4,7 @@ import WalletConnectProvider from '@walletconnect/web3-provider'
 import detectEthereumProvider from '@metamask/detect-provider'
 
 const COOKIE_NAME = 'sorafarm_session_address'
+let WALLET_CONNECT_PROVIDER: WalletConnectProvider | null = null
 
 interface ConnectOptions {
   provider: Provider;
@@ -35,22 +36,26 @@ async function onConnectMetamask () {
 }
 
 async function onConnectWallet (url: string) {
-  const provider = new WalletConnectProvider({
+  WALLET_CONNECT_PROVIDER = new WalletConnectProvider({
     rpc: { 1: url }
   })
-  await provider.enable()
-  const web3Instance = new Web3(provider as any)
+  await WALLET_CONNECT_PROVIDER.enable()
+  const web3Instance = new Web3(WALLET_CONNECT_PROVIDER as any)
   const accounts = await web3Instance.eth.getAccounts()
-  console.log(accounts)
   return accounts.length ? accounts[0] : ''
 }
 
 async function watchEthereum (cb: {
   onAccountChange: Function;
+  onDisconnect: Function;
 }) {
   const ethereum = (window as any).ethereum
   if (ethereum) {
     ethereum.on('accountsChanged', cb.onAccountChange)
+  }
+  if (WALLET_CONNECT_PROVIDER) {
+    WALLET_CONNECT_PROVIDER.on('accountsChanged', cb.onAccountChange)
+    WALLET_CONNECT_PROVIDER.on('disconnect', cb.onDisconnect)
   }
 }
 

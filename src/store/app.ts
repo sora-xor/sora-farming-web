@@ -43,13 +43,17 @@ function initialState () {
     },
     game: {
       totalPswap: '0',
+      startBlock: '0',
       lastBlock: '0',
       lastUpdateTimestamp: new Date().getTime()
     },
     total: {
       XOR: '0',
       VAL: '0',
-      ETH: '0'
+      ETH: '0',
+      XEL: '0',
+      XVL: '0',
+      VEL: '0'
     }
   }
 }
@@ -79,6 +83,7 @@ const mutations = {
   [types.GET_GAME_INFO_SUCCESS] (state, game) {
     Vue.set(state, 'game', {
       totalPswap: game.totalPswap,
+      startBlock: game.startBlock,
       lastBlock: game.lastBlock,
       lastUpdateTimestamp: game.lastUpdateTimestamp
     })
@@ -90,7 +95,10 @@ const mutations = {
     Vue.set(state, 'total', {
       XOR: total.XOR,
       VAL: total.VAL,
-      ETH: total.ETH
+      ETH: total.ETH,
+      XEL: total.XEL,
+      XVL: total.XVL,
+      VEL: total.VEL
     })
   },
   [types.GET_TOTAL_LIQUIDITY_FAILURE] (state, err) {},

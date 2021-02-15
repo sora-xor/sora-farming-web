@@ -700,6 +700,10 @@
             yours.<br>There is a possibility that asset prices will change and you will lose money. <u>Use it at your own
               risk!</u>
           </p>
+          <p class="starText marginTop2em">
+            * APY is just a very rough estimate and not a guarantee! APY is calculated as the average of current liquidity<br>and total rewards distributed from the start of the game up until the current time, assuming $5 per PSWAP token price and annual returns.
+            <br>This is just an estimate and included for illustrative purposes. <u>Do your own research and understand risks involved with liquidity provision.</u>
+          </p>
         </div>
       </div>
     </nav>
@@ -734,6 +738,7 @@
             <a
               data-fancybox
               data-src="#walletInfo"
+              data-options='{"touch" : false}'
               href="javascript:;"
               class="walletAddress notConnected"
             >CONNECT WALLET
@@ -746,6 +751,7 @@
           </template>
           <template v-else>
             <a
+              id="walletInfoModal"
               data-fancybox
               data-src="#walletInfo"
               href="javascript:;"
@@ -758,77 +764,88 @@
           >
             <div class="content-scroll modalPadding">
               <template v-if="!address.length">
-                <span class="fw300fs08em smallMobileText">
+                <div
+                  class="web3modal-modal-card fw300fs08em smallMobileText"
+                  style="padding-bottom:1em;"
+                >
                   <div
-                    class="web3modal-modal-card"
-                    style="padding-bottom:1em;"
+                    v-if="!isMobile"
+                    class="web3modal-provider-wrapper"
+                    style="cursor: pointer;"
+                    @click="onMetamaskConnect"
                   >
-                    <div class="web3modal-provider-wrapper">
-                      <div
-                        class="web3modal-provider-container"
-                        style="cursor: pointer;"
-                        @click="onMetamaskConnect"
-                      >
-                        <div class="web3modal-provider-icon"><img
+                    <div class="web3modal-provider-container">
+                      <div class="web3modal-provider-icon">
+                        <img
                           style="max-height: 10vh;margin:1em;"
                           src="data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjM1NSIgdmlld0JveD0iMCAwIDM5NyAzNTUiIHdpZHRoPSIzOTciIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMSAtMSkiPjxwYXRoIGQ9Im0xMTQuNjIyNjQ0IDMyNy4xOTU0NzIgNTIuMDA0NzE3IDEzLjgxMDE5OHYtMTguMDU5NDlsNC4yNDUyODMtNC4yNDkyOTJoMjkuNzE2OTgydjIxLjI0NjQ1OSAxNC44NzI1MjNoLTMxLjgzOTYyNGwtMzkuMjY4ODY4LTE2Ljk5NzE2OXoiIGZpbGw9IiNjZGJkYjIiLz48cGF0aCBkPSJtMTk5LjUyODMwNSAzMjcuMTk1NDcyIDUwLjk0MzM5NyAxMy44MTAxOTh2LTE4LjA1OTQ5bDQuMjQ1MjgzLTQuMjQ5MjkyaDI5LjcxNjk4MXYyMS4yNDY0NTkgMTQuODcyNTIzaC0zMS44Mzk2MjNsLTM5LjI2ODg2OC0xNi45OTcxNjl6IiBmaWxsPSIjY2RiZGIyIiB0cmFuc2Zvcm09Im1hdHJpeCgtMSAwIDAgMSA0ODMuOTYyMjcgMCkiLz48cGF0aCBkPSJtMTcwLjg3MjY0NCAyODcuODg5NTIzLTQuMjQ1MjgzIDM1LjA1NjY1NyA1LjMwNjYwNC00LjI0OTI5Mmg1NS4xODg2OGw2LjM2NzkyNSA0LjI0OTI5Mi00LjI0NTI4NC0zNS4wNTY2NTctOC40OTA1NjUtNS4zMTE2MTUtNDIuNDUyODMyIDEuMDYyMzIzeiIgZmlsbD0iIzM5MzkzOSIvPjxwYXRoIGQ9Im0xNDIuMjE2OTg0IDUwLjk5MTUwMjIgMjUuNDcxNjk4IDU5LjQ5MDA4NTggMTEuNjc0NTI4IDE3My4xNTg2NDNoNDEuMzkxNTExbDEyLjczNTg0OS0xNzMuMTU4NjQzIDIzLjM0OTA1Ni01OS40OTAwODU4eiIgZmlsbD0iI2Y4OWMzNSIvPjxwYXRoIGQ9Im0zMC43NzgzMDIzIDE4MS42NTcyMjYtMjkuNzE2OTgxNTMgODYuMDQ4MTYxIDc0LjI5MjQ1MzkzLTQuMjQ5MjkzaDQ3Ljc1OTQzNDN2LTM3LjE4MTMwM2wtMi4xMjI2NDEtNzYuNDg3MjUzLTEwLjYxMzIwOCA4LjQ5ODU4M3oiIGZpbGw9IiNmODlkMzUiLz48cGF0aCBkPSJtODcuMDI4MzAzMiAxOTEuMjE4MTM0IDg3LjAyODMwMjggMi4xMjQ2NDYtOS41NTE4ODYgNDQuNjE3NTYzLTQxLjM5MTUxMS0xMC42MjMyMjl6IiBmaWxsPSIjZDg3YzMwIi8+PHBhdGggZD0ibTg3LjAyODMwMzIgMTkyLjI4MDQ1NyAzNi4wODQ5MDU4IDMzLjk5NDMzNHYzMy45OTQzMzR6IiBmaWxsPSIjZWE4ZDNhIi8+PHBhdGggZD0ibTEyMy4xMTMyMDkgMjI3LjMzNzExNCA0Mi40NTI4MzEgMTAuNjIzMjI5IDEzLjc5NzE3IDQ1LjY3OTg4OC05LjU1MTg4NiA1LjMxMTYxNS00Ni42OTgxMTUtMjcuNjIwMzk4eiIgZmlsbD0iI2Y4OWQzNSIvPjxwYXRoIGQ9Im0xMjMuMTEzMjA5IDI2MS4zMzE0NDgtOC40OTA1NjUgNjUuODY0MDI0IDU2LjI1LTM5LjMwNTk0OXoiIGZpbGw9IiNlYjhmMzUiLz48cGF0aCBkPSJtMTc0LjA1NjYwNiAxOTMuMzQyNzggNS4zMDY2MDQgOTAuMjk3NDUxLTE1LjkxOTgxMi00Ni4yMTEwNDl6IiBmaWxsPSIjZWE4ZTNhIi8+PHBhdGggZD0ibTc0LjI5MjQ1MzkgMjYyLjM5Mzc3MSA0OC44MjA3NTUxLTEuMDYyMzIzLTguNDkwNTY1IDY1Ljg2NDAyNHoiIGZpbGw9IiNkODdjMzAiLz48cGF0aCBkPSJtMjQuNDEwMzc3NyAzNTUuODc4MTkzIDkwLjIxMjI2NjMtMjguNjgyNzIxLTQwLjMzMDE5MDEtNjQuODAxNzAxLTczLjIzMTEzMzEzIDUuMzExNjE2eiIgZmlsbD0iI2ViOGYzNSIvPjxwYXRoIGQ9Im0xNjcuNjg4NjgyIDExMC40ODE1ODgtNDUuNjM2NzkzIDM4LjI0MzYyNy0zNS4wMjM1ODU4IDQyLjQ5MjkxOSA4Ny4wMjgzMDI4IDMuMTg2OTY5eiIgZmlsbD0iI2U4ODIxZSIvPjxwYXRoIGQ9Im0xMTQuNjIyNjQ0IDMyNy4xOTU0NzIgNTYuMjUtMzkuMzA1OTQ5LTQuMjQ1MjgzIDMzLjk5NDMzNHYxOS4xMjE4MTNsLTM4LjIwNzU0OC03LjQzNjI2eiIgZmlsbD0iI2RmY2VjMyIvPjxwYXRoIGQ9Im0yMjkuMjQ1Mjg2IDMyNy4xOTU0NzIgNTUuMTg4NjgtMzkuMzA1OTQ5LTQuMjQ1MjgzIDMzLjk5NDMzNHYxOS4xMjE4MTNsLTM4LjIwNzU0OC03LjQzNjI2eiIgZmlsbD0iI2RmY2VjMyIgdHJhbnNmb3JtPSJtYXRyaXgoLTEgMCAwIDEgNTEzLjY3OTI1MiAwKSIvPjxwYXRoIGQ9Im0xMzIuNjY1MDk2IDIxMi40NjQ1OTMtMTEuNjc0NTI4IDI0LjQzMzQyNyA0MS4zOTE1MS0xMC42MjMyMjl6IiBmaWxsPSIjMzkzOTM5IiB0cmFuc2Zvcm09Im1hdHJpeCgtMSAwIDAgMSAyODMuMzcyNjQ2IDApIi8+PHBhdGggZD0ibTIzLjM0OTA1NyAxLjA2MjMyMjk2IDE0NC4zMzk2MjUgMTA5LjQxOTI2NTA0LTI0LjQxMDM3OC01OS40OTAwODU4eiIgZmlsbD0iI2U4OGYzNSIvPjxwYXRoIGQ9Im0yMy4zNDkwNTcgMS4wNjIzMjI5Ni0xOS4xMDM3NzM5MiA1OC40Mjc3NjI5NCAxMC42MTMyMDc3MiA2My43MzkzNzgxLTcuNDI5MjQ1NDEgNC4yNDkyOTIgMTAuNjEzMjA3NzEgOS41NjA5MDYtOC40OTA1NjYxNyA3LjQzNjI2MSAxMS42NzQ1Mjg0NyAxMC42MjMyMjktNy40MjkyNDU0IDYuMzczOTM4IDE2Ljk4MTEzMjMgMjEuMjQ2NDU5IDc5LjU5OTA1NzctMjQuNDMzNDI4YzM4LjkxNTA5Ni0zMS4xNjE0NzMgNTguMDE4ODY5LTQ3LjA5NjMxOCA1Ny4zMTEzMjItNDcuODA0NTMzLS43MDc1NDgtLjcwODIxNS00OC44MjA3NTYtMzcuMTgxMzAzNi0xNDQuMzM5NjI1LTEwOS40MTkyNjUwNHoiIGZpbGw9IiM4ZTVhMzAiLz48ZyB0cmFuc2Zvcm09Im1hdHJpeCgtMSAwIDAgMSAzOTkuMDU2NjExIDApIj48cGF0aCBkPSJtMzAuNzc4MzAyMyAxODEuNjU3MjI2LTI5LjcxNjk4MTUzIDg2LjA0ODE2MSA3NC4yOTI0NTM5My00LjI0OTI5M2g0Ny43NTk0MzQzdi0zNy4xODEzMDNsLTIuMTIyNjQxLTc2LjQ4NzI1My0xMC42MTMyMDggOC40OTg1ODN6IiBmaWxsPSIjZjg5ZDM1Ii8+PHBhdGggZD0ibTg3LjAyODMwMzIgMTkxLjIxODEzNCA4Ny4wMjgzMDI4IDIuMTI0NjQ2LTkuNTUxODg2IDQ0LjYxNzU2My00MS4zOTE1MTEtMTAuNjIzMjI5eiIgZmlsbD0iI2Q4N2MzMCIvPjxwYXRoIGQ9Im04Ny4wMjgzMDMyIDE5Mi4yODA0NTcgMzYuMDg0OTA1OCAzMy45OTQzMzR2MzMuOTk0MzM0eiIgZmlsbD0iI2VhOGQzYSIvPjxwYXRoIGQ9Im0xMjMuMTEzMjA5IDIyNy4zMzcxMTQgNDIuNDUyODMxIDEwLjYyMzIyOSAxMy43OTcxNyA0NS42Nzk4ODgtOS41NTE4ODYgNS4zMTE2MTUtNDYuNjk4MTE1LTI3LjYyMDM5OHoiIGZpbGw9IiNmODlkMzUiLz48cGF0aCBkPSJtMTIzLjExMzIwOSAyNjEuMzMxNDQ4LTguNDkwNTY1IDY1Ljg2NDAyNCA1NS4xODg2OC0zOC4yNDM2MjZ6IiBmaWxsPSIjZWI4ZjM1Ii8+PHBhdGggZD0ibTE3NC4wNTY2MDYgMTkzLjM0Mjc4IDUuMzA2NjA0IDkwLjI5NzQ1MS0xNS45MTk4MTItNDYuMjExMDQ5eiIgZmlsbD0iI2VhOGUzYSIvPjxwYXRoIGQ9Im03NC4yOTI0NTM5IDI2Mi4zOTM3NzEgNDguODIwNzU1MS0xLjA2MjMyMy04LjQ5MDU2NSA2NS44NjQwMjR6IiBmaWxsPSIjZDg3YzMwIi8+PHBhdGggZD0ibTI0LjQxMDM3NzcgMzU1Ljg3ODE5MyA5MC4yMTIyNjYzLTI4LjY4MjcyMS00MC4zMzAxOTAxLTY0LjgwMTcwMS03My4yMzExMzMxMyA1LjMxMTYxNnoiIGZpbGw9IiNlYjhmMzUiLz48cGF0aCBkPSJtMTY3LjY4ODY4MiAxMTAuNDgxNTg4LTQ1LjYzNjc5MyAzOC4yNDM2MjctMzUuMDIzNTg1OCA0Mi40OTI5MTkgODcuMDI4MzAyOCAzLjE4Njk2OXoiIGZpbGw9IiNlODgyMWUiLz48cGF0aCBkPSJtMTMyLjY2NTA5NiAyMTIuNDY0NTkzLTExLjY3NDUyOCAyNC40MzM0MjcgNDEuMzkxNTEtMTAuNjIzMjI5eiIgZmlsbD0iIzM5MzkzOSIgdHJhbnNmb3JtPSJtYXRyaXgoLTEgMCAwIDEgMjgzLjM3MjY0NiAwKSIvPjxwYXRoIGQ9Im0yMy4zNDkwNTcgMS4wNjIzMjI5NiAxNDQuMzM5NjI1IDEwOS40MTkyNjUwNC0yNC40MTAzNzgtNTkuNDkwMDg1OHoiIGZpbGw9IiNlODhmMzUiLz48cGF0aCBkPSJtMjMuMzQ5MDU3IDEuMDYyMzIyOTYtMTkuMTAzNzczOTIgNTguNDI3NzYyOTQgMTAuNjEzMjA3NzIgNjMuNzM5Mzc4MS03LjQyOTI0NTQxIDQuMjQ5MjkyIDEwLjYxMzIwNzcxIDkuNTYwOTA2LTguNDkwNTY2MTcgNy40MzYyNjEgMTEuNjc0NTI4NDcgMTAuNjIzMjI5LTcuNDI5MjQ1NCA2LjM3MzkzOCAxNi45ODExMzIzIDIxLjI0NjQ1OSA3OS41OTkwNTc3LTI0LjQzMzQyOGMzOC45MTUwOTYtMzEuMTYxNDczIDU4LjAxODg2OS00Ny4wOTYzMTggNTcuMzExMzIyLTQ3LjgwNDUzMy0uNzA3NTQ4LS43MDgyMTUtNDguODIwNzU2LTM3LjE4MTMwMzYtMTQ0LjMzOTYyNS0xMDkuNDE5MjY1MDR6IiBmaWxsPSIjOGU1YTMwIi8+PC9nPjwvZz48L3N2Zz4="
                           alt="MetaMask"
-                        ></div>
-                        <div class="web3modal-provider-name"><strong>MetaMask</strong></div>
-                        <div
-                          v-if="!isMetamaskConnecting"
-                          class="web3modal-provider-description"
-                        >Connect to your MetaMask Wallet</div>
-                        <svg
-                          v-else
-                          class="spinner"
-                          viewBox="0 0 50 50"
                         >
-                          <circle
-                            class="path"
-                            cx="25"
-                            cy="25"
-                            r="20"
-                            fill="none"
-                            stroke-width="5"
-                          />
-                        </svg>
                       </div>
-                    </div>
-                    <div class="web3modal-provider-wrapper">
+                      <div class="web3modal-provider-name">
+                        <strong>MetaMask</strong>
+                      </div>
                       <div
-                        class="web3modal-provider-container"
-                        style="cursor: pointer;"
-                        @click="onWalletConnect"
+                        v-if="!isMetamaskConnecting"
+                        class="web3modal-provider-description"
                       >
-                        <div class="web3modal-provider-icon"><img
-                          style="max-height: 10vh;margin:3em 1em 1em;"
-                          src="data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIHdpZHRoPSI1MTIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiPjxyYWRpYWxHcmFkaWVudCBpZD0iYSIgY3g9IjAlIiBjeT0iNTAlIiByPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiM1ZDlkZjYiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMwMDZmZmYiLz48L3JhZGlhbEdyYWRpZW50PjxnIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCI+PHBhdGggZD0ibTI1NiAwYzE0MS4zODQ4OTYgMCAyNTYgMTE0LjYxNTEwNCAyNTYgMjU2cy0xMTQuNjE1MTA0IDI1Ni0yNTYgMjU2LTI1Ni0xMTQuNjE1MTA0LTI1Ni0yNTYgMTE0LjYxNTEwNC0yNTYgMjU2LTI1NnoiIGZpbGw9InVybCgjYSkiLz48cGF0aCBkPSJtNjQuNjkxNzU1OCAzNy43MDg4Mjk4YzUxLjUzMjgwNzItNTAuMjc4NDM5NyAxMzUuMDgzOTk0Mi01MC4yNzg0Mzk3IDE4Ni42MTY3OTkyIDBsNi4yMDIwNTcgNi4wNTEwOTA2YzIuNTc2NjQgMi41MTM5MjE4IDIuNTc2NjQgNi41ODk3OTQ4IDAgOS4xMDM3MTc3bC0yMS4yMTU5OTggMjAuNjk5NTc1OWMtMS4yODgzMjEgMS4yNTY5NjE5LTMuMzc3MSAxLjI1Njk2MTktNC42NjU0MjEgMGwtOC41MzQ3NjYtOC4zMjcwMjA1Yy0zNS45NTA1NzMtMzUuMDc1NDk2Mi05NC4yMzc5NjktMzUuMDc1NDk2Mi0xMzAuMTg4NTQ0IDBsLTkuMTQwMDI4MiA4LjkxNzU1MTljLTEuMjg4MzIxNyAxLjI1Njk2MDktMy4zNzcxMDE2IDEuMjU2OTYwOS00LjY2NTQyMDggMGwtMjEuMjE1OTk3My0yMC42OTk1NzU5Yy0yLjU3NjY0MDMtMi41MTM5MjI5LTIuNTc2NjQwMy02LjU4OTc5NTggMC05LjEwMzcxNzd6bTIzMC40OTM0ODUyIDQyLjgwODkxMTcgMTguODgyMjc5IDE4LjQyMjcyNjJjMi41NzY2MjcgMi41MTM5MTAzIDIuNTc2NjQyIDYuNTg5NzU5My4wMDAwMzIgOS4xMDM2ODYzbC04NS4xNDE0OTggODMuMDcwMzU4Yy0yLjU3NjYyMyAyLjUxMzk0MS02Ljc1NDE4MiAyLjUxMzk2OS05LjMzMDg0LjAwMDA2Ni0uMDAwMDEtLjAwMDAxLS4wMDAwMjMtLjAwMDAyMy0uMDAwMDMzLS4wMDAwMzRsLTYwLjQyODI1Ni01OC45NTc0NTFjLS42NDQxNi0uNjI4NDgxLTEuNjg4NTUtLjYyODQ4MS0yLjMzMjcxIDAtLjAwMDAwNC4wMDAwMDQtLjAwMDAwOC4wMDAwMDctLjAwMDAxMi4wMDAwMTFsLTYwLjQyNjk2ODMgNTguOTU3NDA4Yy0yLjU3NjYxNDEgMi41MTM5NDctNi43NTQxNzQ2IDIuNTEzOTktOS4zMzA4NDA4LjAwMDA5Mi0uMDAwMDE1MS0uMDAwMDE0LS4wMDAwMzA5LS4wMDAwMjktLjAwMDA0NjctLjAwMDA0NmwtODUuMTQzODY3NzQtODMuMDcxNDYzYy0yLjU3NjYzOTI4LTIuNTEzOTIxLTIuNTc2NjM5MjgtNi41ODk3OTUgMC05LjEwMzcxNjNsMTguODgyMzEyNjQtMTguNDIyNjk1NWMyLjU3NjYzOTMtMi41MTM5MjIyIDYuNzU0MTk5My0yLjUxMzkyMjIgOS4zMzA4Mzk3IDBsNjAuNDI5MTM0NyA1OC45NTgyNzU4Yy42NDQxNjA4LjYyODQ4IDEuNjg4NTQ5NS42Mjg0OCAyLjMzMjcxMDMgMCAuMDAwMDA5NS0uMDAwMDA5LjAwMDAxODItLjAwMDAxOC4wMDAwMjc3LS4wMDAwMjVsNjAuNDI2MTA2NS01OC45NTgyNTA4YzIuNTc2NTgxLTIuNTEzOTggNi43NTQxNDItMi41MTQwNzQzIDkuMzMwODQtLjAwMDIxMDMuMDAwMDM3LjAwMDAzNTQuMDAwMDcyLjAwMDA3MDkuMDAwMTA3LjAwMDEwNjNsNjAuNDI5MDU2IDU4Ljk1ODM1NDhjLjY0NDE1OS42Mjg0NzkgMS42ODg1NDkuNjI4NDc5IDIuMzMyNzA5IDBsNjAuNDI4MDc5LTU4Ljk1NzE5MjVjMi41NzY2NC0yLjUxMzkyMzEgNi43NTQxOTktMi41MTM5MjMxIDkuMzMwODM5IDB6IiBmaWxsPSIjZmZmIiBmaWxsLXJ1bGU9Im5vbnplcm8iIHRyYW5zZm9ybT0idHJhbnNsYXRlKDk4IDE2MCkiLz48L2c+PC9zdmc+"
-                          alt="WalletConnect"
-                        ></div>
-                        <div class="web3modal-provider-name"><strong>WalletConnect</strong></div>
-                        <div
-                          v-if="!isWalletConnecting"
-                          class="web3modal-provider-description"
-                        >Scan with WalletConnect to connect</div>
-                        <svg
-                          v-else
-                          class="spinner"
-                          viewBox="0 0 50 50"
-                        >
-                          <circle
-                            class="path"
-                            cx="25"
-                            cy="25"
-                            r="20"
-                            fill="none"
-                            stroke-width="5"
-                          />
-                        </svg>
+                        Connect to your MetaMask Wallet
                       </div>
+                      <svg
+                        v-else
+                        class="spinner"
+                        viewBox="0 0 50 50"
+                      >
+                        <circle
+                          class="path"
+                          cx="25"
+                          cy="25"
+                          r="20"
+                          fill="none"
+                          stroke-width="5"
+                        />
+                      </svg>
                     </div>
                   </div>
-                </span>
+                  <div
+                    class="web3modal-provider-wrapper"
+                    style="cursor: pointer;"
+                    @click="onWalletConnect"
+                  >
+                    <div class="web3modal-provider-container">
+                      <div class="web3modal-provider-icon">
+                        <img
+                          style="max-height: 10vh;margin:1em 1em 1em;"
+                          src="data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIHdpZHRoPSI1MTIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiPjxyYWRpYWxHcmFkaWVudCBpZD0iYSIgY3g9IjAlIiBjeT0iNTAlIiByPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiM1ZDlkZjYiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMwMDZmZmYiLz48L3JhZGlhbEdyYWRpZW50PjxnIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCI+PHBhdGggZD0ibTI1NiAwYzE0MS4zODQ4OTYgMCAyNTYgMTE0LjYxNTEwNCAyNTYgMjU2cy0xMTQuNjE1MTA0IDI1Ni0yNTYgMjU2LTI1Ni0xMTQuNjE1MTA0LTI1Ni0yNTYgMTE0LjYxNTEwNC0yNTYgMjU2LTI1NnoiIGZpbGw9InVybCgjYSkiLz48cGF0aCBkPSJtNjQuNjkxNzU1OCAzNy43MDg4Mjk4YzUxLjUzMjgwNzItNTAuMjc4NDM5NyAxMzUuMDgzOTk0Mi01MC4yNzg0Mzk3IDE4Ni42MTY3OTkyIDBsNi4yMDIwNTcgNi4wNTEwOTA2YzIuNTc2NjQgMi41MTM5MjE4IDIuNTc2NjQgNi41ODk3OTQ4IDAgOS4xMDM3MTc3bC0yMS4yMTU5OTggMjAuNjk5NTc1OWMtMS4yODgzMjEgMS4yNTY5NjE5LTMuMzc3MSAxLjI1Njk2MTktNC42NjU0MjEgMGwtOC41MzQ3NjYtOC4zMjcwMjA1Yy0zNS45NTA1NzMtMzUuMDc1NDk2Mi05NC4yMzc5NjktMzUuMDc1NDk2Mi0xMzAuMTg4NTQ0IDBsLTkuMTQwMDI4MiA4LjkxNzU1MTljLTEuMjg4MzIxNyAxLjI1Njk2MDktMy4zNzcxMDE2IDEuMjU2OTYwOS00LjY2NTQyMDggMGwtMjEuMjE1OTk3My0yMC42OTk1NzU5Yy0yLjU3NjY0MDMtMi41MTM5MjI5LTIuNTc2NjQwMy02LjU4OTc5NTggMC05LjEwMzcxNzd6bTIzMC40OTM0ODUyIDQyLjgwODkxMTcgMTguODgyMjc5IDE4LjQyMjcyNjJjMi41NzY2MjcgMi41MTM5MTAzIDIuNTc2NjQyIDYuNTg5NzU5My4wMDAwMzIgOS4xMDM2ODYzbC04NS4xNDE0OTggODMuMDcwMzU4Yy0yLjU3NjYyMyAyLjUxMzk0MS02Ljc1NDE4MiAyLjUxMzk2OS05LjMzMDg0LjAwMDA2Ni0uMDAwMDEtLjAwMDAxLS4wMDAwMjMtLjAwMDAyMy0uMDAwMDMzLS4wMDAwMzRsLTYwLjQyODI1Ni01OC45NTc0NTFjLS42NDQxNi0uNjI4NDgxLTEuNjg4NTUtLjYyODQ4MS0yLjMzMjcxIDAtLjAwMDAwNC4wMDAwMDQtLjAwMDAwOC4wMDAwMDctLjAwMDAxMi4wMDAwMTFsLTYwLjQyNjk2ODMgNTguOTU3NDA4Yy0yLjU3NjYxNDEgMi41MTM5NDctNi43NTQxNzQ2IDIuNTEzOTktOS4zMzA4NDA4LjAwMDA5Mi0uMDAwMDE1MS0uMDAwMDE0LS4wMDAwMzA5LS4wMDAwMjktLjAwMDA0NjctLjAwMDA0NmwtODUuMTQzODY3NzQtODMuMDcxNDYzYy0yLjU3NjYzOTI4LTIuNTEzOTIxLTIuNTc2NjM5MjgtNi41ODk3OTUgMC05LjEwMzcxNjNsMTguODgyMzEyNjQtMTguNDIyNjk1NWMyLjU3NjYzOTMtMi41MTM5MjIyIDYuNzU0MTk5My0yLjUxMzkyMjIgOS4zMzA4Mzk3IDBsNjAuNDI5MTM0NyA1OC45NTgyNzU4Yy42NDQxNjA4LjYyODQ4IDEuNjg4NTQ5NS42Mjg0OCAyLjMzMjcxMDMgMCAuMDAwMDA5NS0uMDAwMDA5LjAwMDAxODItLjAwMDAxOC4wMDAwMjc3LS4wMDAwMjVsNjAuNDI2MTA2NS01OC45NTgyNTA4YzIuNTc2NTgxLTIuNTEzOTggNi43NTQxNDItMi41MTQwNzQzIDkuMzMwODQtLjAwMDIxMDMuMDAwMDM3LjAwMDAzNTQuMDAwMDcyLjAwMDA3MDkuMDAwMTA3LjAwMDEwNjNsNjAuNDI5MDU2IDU4Ljk1ODM1NDhjLjY0NDE1OS42Mjg0NzkgMS42ODg1NDkuNjI4NDc5IDIuMzMyNzA5IDBsNjAuNDI4MDc5LTU4Ljk1NzE5MjVjMi41NzY2NC0yLjUxMzkyMzEgNi43NTQxOTktMi41MTM5MjMxIDkuMzMwODM5IDB6IiBmaWxsPSIjZmZmIiBmaWxsLXJ1bGU9Im5vbnplcm8iIHRyYW5zZm9ybT0idHJhbnNsYXRlKDk4IDE2MCkiLz48L2c+PC9zdmc+"
+                          alt="WalletConnect"
+                        >
+                      </div>
+                      <div class="web3modal-provider-name">
+                        <strong>WalletConnect</strong>
+                      </div>
+                      <div
+                        v-if="!isWalletConnecting"
+                        class="web3modal-provider-description"
+                      >
+                        Scan with WalletConnect to connect
+                      </div>
+                      <svg
+                        v-else
+                        class="spinner"
+                        viewBox="0 0 50 50"
+                      >
+                        <circle
+                          class="path"
+                          cx="25"
+                          cy="25"
+                          r="20"
+                          fill="none"
+                          stroke-width="5"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
               </template>
               <template v-else>
                 <span class="fw300fs08em smallMobileText">
@@ -855,29 +872,36 @@
             <use
               xlink:href="#pswap"
             />
-          </svg> {{ rewardAmount }}<span class="fs075em"> PSWAP</span></span>
+          </svg>{{ rewardAmount }}<span class="fs075em"> PSWAP</span></span>
           <span class="bigValue">REWARDS HARVESTED</span>
         </div>
         <div class="ip3 textAlignLeft">
+          <div class="textAlignCenter padding05em0">
+            <span class="bigMoney2">$ {{ totalValueLockedAmount }}</span>
+            <span class="bigValue3">TOTAL VALUE LOCKED</span>
+          </div>
           <figure class="graphFigure">
             <div class="graph">
               <div
                 class="graphBar graphBorders"
-                :style="`--h: ${getBarPercent(Pairs.XE)}%`"
+                :style="getBarStyles(Pairs.XE)"
               />
               <div
                 class="graphBar graphBorders"
-                :style="`--h: ${getBarPercent(Pairs.VE)}%`"
+                :style="getBarStyles(Pairs.VE)"
               />
               <div
                 class="graphBar graphBorders"
-                :style="`--h: ${getBarPercent(Pairs.XV)}%`"
+                :style="getBarStyles(Pairs.XV)"
               />
             </div>
           </figure>
           <div class="fs09emMargin0Padding0 borderBottom2pxDottedFff4 padding05em0 floatLeftWidth33Padding54px">
             <div class="fs075em textAlignCenter">
               {{ liquidityProportion(Pairs.XE).percent }}%
+            </div>
+            <div class="fs065em textAlignCenter fw600 marginTop05em colorFff174">
+              APY* {{ pairAPY(Pairs.XE) }}
             </div>
             <span class="fs075em">XOR • ETH</span><br>
             <svg class="iconBorder ticker">
@@ -896,6 +920,9 @@
           <div class="fs09emMargin0Padding0 borderBottom2pxDottedFff4 padding05em0 floatLeftWidth33Padding54px">
             <div class="fs075em textAlignCenter">
               {{ liquidityProportion(Pairs.VE).percent }}%
+            </div>
+            <div class="fs065em textAlignCenter fw600 marginTop05em colorFff174">
+              APY* {{ pairAPY(Pairs.VE) }}
             </div>
             <span class="fs075em">VAL • ETH</span><br>
             <svg class="ticker">
@@ -923,6 +950,9 @@
           <div class="fs09emMargin0Padding0 padding05em0 floatLeftWidth33Padding54px">
             <div class="fs075em textAlignCenter">
               {{ liquidityProportion(Pairs.XV).percent }}%
+            </div>
+            <div class="fs065em textAlignCenter fw600 marginTop05em colorFff174">
+              APY* {{ pairAPY(Pairs.XV) }}
             </div>
             <span class="fs075em">XOR • VAL</span><br>
             <svg class="iconBorder ticker">
@@ -1025,10 +1055,15 @@
               xlink:href="#pswap"
             />
           </svg>{{ $formatNumber(game.totalPswap, 2) }}<span class="fs075em"> PSWAP</span></span>
+          <!--
+            Info about (game.lastBlock - 1)
+            The game is counted to the last block, but it does not include it (startBlock, lastBlock)
+            So we need to subtract 1 to show the real block
+           -->
           <span class="colorFffFs075emFw400 lastUpdated">Last update {{ lastUpdateDate }}<br><a
-            :href="`https://etherscan.io/block/${game.lastBlock}`"
+            :href="`https://etherscan.io/block/${game.lastBlock - 1}`"
             target="_blank"
-          >•{{ game.lastBlock }}</a></span>
+          >•{{ game.lastBlock - 1 }}</a></span>
         </div>
         <div class="wrapRules">
           <a
@@ -1315,6 +1350,15 @@
               />
             </svg></a>
           </li>
+          <li class="cropRight">
+            <a
+              class="trimRight shift-up-2 colorFffFs075emFw600"
+              href="https://www.reddit.com/r/SORA/"
+              target="_blank"
+            ><svg><use
+              xlink:href="#reddit"
+            /></svg></a>
+          </li>
         </ul>
         <a
           href="https://polkaswap.io"
@@ -1369,6 +1413,15 @@
               />
             </svg></a>
           </li>
+          <li class="cropRight">
+            <a
+              class="trimRight shift-up-2 colorFffFs075emFw600"
+              href="https://www.reddit.com/r/Polkaswap/"
+              target="_blank"
+            ><svg><use
+              xlink:href="#reddit"
+            /></svg></a>
+          </li>
         </ul>
         <a
           href="https://fearlesswallet.io"
@@ -1404,8 +1457,10 @@
         </ul>
         <p class="smallest marginTop2em">
           SORA Farming is a PSWAP harvesting game. The decision to provide liquidity is
-          yours. There is a possibility that asset prices will change and you will lose money. <u>Use it at your own
-            risk!</u>
+          yours. There is a possibility that asset prices will change and you will lose money. <u>Use it at your own risk!</u>
+        </p>
+        <p class="starText marginTop2em">
+          * APY is just a very rough estimate and not a guarantee! APY is calculated as the average of current liquidity and total rewards distributed from the start of the game up until the current time, assuming $5 per PSWAP token price and annual returns. This is just an estimate and included for illustrative purposes. <u>Do your own research and understand risks involved with liquidity provision.</u>
         </p>
       </div>
     </nav>
@@ -1438,7 +1493,7 @@
           <span class="fw100 colorBBFF92">—</span>
         </p>
         <p class="small margin-bottom-2">
-          <span class="fw300">$PSWAP tokens are gathered by farming land ー i.e., <strong>providing liquidity for XOR-ETH, VAL-ETH, or VAL-XOR pairs on Uniswap or Mooniswap</strong></span>
+          <span class="fw300">SORA Farm is a <strong>community initiative</strong> game that allows users to gather $PSWAP tokens by providing liquidity for ETH-XOR, ETH-VAL, XOR-VAL pairs on Uniswap or Mooniswap.</span>
         </p>
         <p class="largest m0p0 textAlignCenter">
           <span class="fw100 colorBBFF92">—</span>
@@ -1450,42 +1505,13 @@
           <span class="fw100 colorBBFF92">—</span>
         </p>
         <p class="small margin-bottom-2">
-          <span class="fw300">$PSWAP token rewards are allocated <strong>evenly for each liquidity pool</strong> and within each pool, liquidity providers gather rewards proportionally</span>
+          <span class="fw300">$PSWAP token rewards are allocated <strong>evenly for each liquidity pair</strong> and within each pair, liquidity providers gather rewards proportionally</span>
         </p>
         <p class="largest m0p0 textAlignCenter">
           <span class="fw100 colorBBFF92">—</span>
         </p>
         <p class="small margin-bottom-2">
-          <span class="fw300">$PSWAP token rewards for farming by providing liquidity on Uniswap and Mooniswap are limited to <strong>2 million $PSWAP</strong> tokens in the following way:</span>
-        </p>
-        <ul class="rulesList">
-          <li class="rulesListItem">
-            <p class="small">
-              <span class="fw300">with 1 million PSWAP being the potential reward amount up to $12 million total liquidity provided;</span>
-            </p>
-          </li>
-          <li class="rulesListItem">
-            <p class="small">
-              <span class="fw300">with rewards linearly increasing after $12 million of total liquidity is added across all liquidity pools, up to $24 million of total liquidity;</span>
-            </p>
-          </li>
-          <li class="rulesListItem">
-            <p class="small">
-              <span class="fw300">up to 2% of $PSWAP (2 million tokens) will be available for rewards after $24 million total liquidity is added.</span>
-            </p>
-          </li>
-        </ul>
-        <p class="largest m0p0 textAlignCenter">
-          <span class="fw100 colorBBFF92">—</span>
-        </p>
-        <p class="small margin-bottom-2">
-          <span class="fw300">More $PSWAP tokens are distributed <strong>at the beginning of the game</strong> and decrease with every distribution</span>
-        </p>
-        <p class="largest m0p0 textAlignCenter">
-          <span class="fw100 colorBBFF92">—</span>
-        </p>
-        <p class="small margin-bottom-2">
-          <span class="fw300">There is <strong>a time vesting coefficient</strong> for each user, the longer you provide liquidity, the higher the rewards. If you remove liquidity, then the vesting coefficient is reset.</span>
+          <span class="fw300">There is a time vesting coefficient for each user associated with each pair: the longer you provide liquidity — the higher the reward for that pair. If you remove all the liquidity from the pair, then your vesting coefficient is reset for this pair.</span>
         </p>
         <p class="largest m0p0 textAlignCenter">
           <span class="fw100 colorBBFF92">—</span>
@@ -1502,12 +1528,7 @@
         <ul class="rulesList">
           <li class="rulesListItem">
             <p class="small">
-              <span class="fw300">The length of the game of approximately 3 months (606,462 blocks) is reached</span>
-            </p>
-          </li>
-          <li class="rulesListItem">
-            <p class="small">
-              <span class="fw300">2 million $PSWAP tokens distributed</span>
+              <span class="fw300">Polkaswap launch</span>
             </p>
           </li>
           <li class="rulesListItem">
@@ -1528,14 +1549,12 @@
         <p class="small margin-bottom-2">
           <span class="fw300">The first calculation block is <strong>11380050</strong></span>
         </p>
-        <img
-          src="assets/img/curve.png"
-          class="auto mw67p flexCenter"
-          style="margin: 0 auto;"
-          width="640"
-          height="620"
-          alt="Curve"
-        >
+        <p class="largest m0p0 textAlignCenter">
+          <span class="fw100 colorBBFF92">—</span>
+        </p>
+        <p class="small margin-bottom-2">
+          <span class="fw300">Please make sure to save your key for the wallet you provide liquidity from. Without this key, you will not be able to claim your rewards! <strong>You will never be asked to provide your private key or passphrase to anyone to claim $PSWAP. Never give it away!</strong></span>
+        </p>
         <a
           class="rulesArticle fs09em textAlignCenter"
           href="https://polkaswap.medium.com/sora-farm-game-193f74d8e91f"
@@ -1704,8 +1723,9 @@
 
 <script lang="ts">
 import { Vue, Component, Mixins, Watch } from 'vue-property-decorator'
-import { Action, State } from 'vuex-class'
+import { Action, Getter, State } from 'vuex-class'
 import BN from 'bignumber.js'
+import isMobile, { isMobileResult } from 'ismobilejs'
 import NumberMixin from '@/mixins/numberMixin'
 import cloneDeep from 'lodash/cloneDeep'
 
@@ -1779,6 +1799,9 @@ export default class Game extends Mixins(NumberMixin) {
         } else {
           this.disconnectWallet()
         }
+      },
+      onDisconnect: (code: number, reason: string) => {
+        this.disconnectWallet()
       }
     })
   }
@@ -1787,6 +1810,8 @@ export default class Game extends Mixins(NumberMixin) {
   @State(state => state.app.account) account!: Account
   @State(state => state.app.game) game
   @State(state => state.app.map) map!: GameMap
+
+  @Getter totalLiquidity
 
   @Action getAccountInfo!: (address) => Promise<void>
   @Action connectWallet!: (options) => Promise<void>
@@ -1815,6 +1840,18 @@ export default class Game extends Mixins(NumberMixin) {
 
   get rewardAmount (): string {
     return this.$formatNumber(this.account.user.reward, 3)
+  }
+
+  get totalValueLockedAmount (): string {
+    const { XEL, XVL, VEL } = this.totalLiquidity
+    return this.$formatNumber(
+      new BN(0).plus(XEL).plus(XVL).plus(VEL),
+      2
+    )
+  }
+
+  get isMobile (): boolean {
+    return isMobile(window.navigator).phone || isMobile(window.navigator).tablet
   }
 
   async onMetamaskConnect () {
@@ -1847,9 +1884,43 @@ export default class Game extends Mixins(NumberMixin) {
     return gameUtil.getCellImgPath(cell)
   }
 
-  getBarPercent (pair: string): string {
+  getBarInfo (pair: string): { h: string; h2: string; height: string } {
+    const findPairProportion = (liq: BN, pairs: BN[]): BN => {
+      const pairLiquidity = pairs.slice().sort((a, b) => b.minus(a).isNegative() ? -1 : 1)
+      if (pairLiquidity[0].eq(liq)) {
+        return new BN(100)
+      } else if (pairLiquidity[1].eq(liq)) {
+        return new BN(75)
+      } else {
+        return new BN(50)
+      }
+    }
+    const { XEL, XVL, VEL } = this.totalLiquidity
+    const pairToLiquidity = {
+      [Pairs.XE]: new BN(XEL),
+      [Pairs.XV]: new BN(XVL),
+      [Pairs.VE]: new BN(VEL)
+    }
     const { percent } = this.liquidityProportion(pair)
-    return new BN(percent).div(100).multipliedBy(85).plus(15).toString()
+    const h = new BN(percent).div(100).multipliedBy(85).plus(15)
+    const h2 = h.plus(10)
+    const height = findPairProportion(pairToLiquidity[pair], [
+      new BN(XEL), new BN(XVL), new BN(VEL)])
+    return {
+      h: new BN(percent).eq(0) ? '0.3em' : `${h.toString()}%`,
+      h2: new BN(percent).eq(0) ? '0.5em' : `${h2.toString()}%`,
+      height: `${height.toString()}%`
+    }
+  }
+
+  getBarStyles (pair: string): string {
+    const info = this.getBarInfo(pair)
+    return `
+      --h: ${info.h};
+      --h2: ${info.h2};
+      height: ${info.height}!important;
+      align-self: flex-end;
+    `
   }
 
   liquidityProportion (pair: string): { token0: string; token1: string; percent: string} {
@@ -1866,6 +1937,27 @@ export default class Game extends Mixins(NumberMixin) {
       percent: new BN(this.account.liquidity[pair].percent)
         .multipliedBy(100)
     })
+  }
+
+  /**
+   * Formula:
+   *   APY = (rewardFactor/timeFactor) * 100
+   *   rewardFactor = currentRewards / currentLiquidity
+   *   timeFactor = blocksSinceStart / blocksInYear
+   * currentRewards = all PSWAP * $5 / 3 (for 1 pool)
+  */
+  pairAPY (pair: string): string {
+    const { XEL, XVL, VEL } = this.totalLiquidity
+    const blocksInYear = 2425844
+    const currentRewards = new BN(this.game.totalPswap).multipliedBy(5).div(3)
+    const timeFactor = new BN(this.game.lastBlock).minus(this.game.startBlock).div(blocksInYear)
+    const APY = {
+      [this.Pairs.XE]: currentRewards.div(XEL).div(timeFactor).multipliedBy(100),
+      [this.Pairs.XV]: currentRewards.div(XVL).div(timeFactor).multipliedBy(100),
+      [this.Pairs.VE]: currentRewards.div(VEL).div(timeFactor).multipliedBy(100)
+    }
+    if (!APY[pair].isFinite()) return '0%'
+    return `${this.$formatNumber(APY[pair], 2)}%`
   }
 
   closeArticle () {
@@ -1891,16 +1983,19 @@ export default class Game extends Mixins(NumberMixin) {
 <style scoped lang="scss">
 .graphBar:nth-of-type(1) {
   grid-column: 1;
-  --h: 15%;
+  --h: 0%;
+  --h2: 0%;
 }
 
 .graphBar:nth-of-type(2) {
   grid-column: 2;
-  --h: 15%;
+  --h: 0%;
+  --h2: 0%;
 }
 
 .graphBar:nth-of-type(3) {
   grid-column: 3;
-  --h: 15%;
+  --h: 0%;
+  --h2: 0%;
 }
 </style>

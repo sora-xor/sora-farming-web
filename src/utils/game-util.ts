@@ -89,7 +89,8 @@ const populateMap = (map, { x, y }, { XOR, VAL, ETH }, { user, liquidity }) => {
 
   let priority = Math.floor(Math.max(x, y) / 2)
   let totalCells = XOR + VAL + ETH
-  while (totalCells > 0) {
+  let totalAvaliableCells = x * y
+  while (totalCells > 0 && totalAvaliableCells > 0) {
     map.forEach((row: Cell[]) => {
       row.forEach((cell: Cell) => {
         if (cell.priority === priority) {
@@ -141,6 +142,7 @@ const populateMap = (map, { x, y }, { XOR, VAL, ETH }, { user, liquidity }) => {
       })
     })
     priority -= 1
+    totalAvaliableCells -= map[0].length
   }
   return map
 }
